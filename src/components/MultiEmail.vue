@@ -1,9 +1,9 @@
 <template>
   <div class="multiple_emails-container">
-    <input class="email-input" v-bind:class="{'invalid-email': invalid_email }" v-model="current_email" @keyup.enter="addEmail"/>
+    <input class="email-input" v-bind:class="{'invalid-email': invalid_email }" v-model="current_email" @keyup.enter="saveEmail"/>
     <div> 
       <ul>
-        <li class="multiple_emails-email" v-for="(email, index) in email_list" :key="index">
+        <li class="multiple_emails-email" v-for="(email, index) in email_list" :key="index" @click="selectBy(index)">
           <span class="multiple_emails-close">
             <button @click="deleteEmail(index)" type="button"><i class="fa fa-calendar-plus-o"></i></button>
           </span>
@@ -25,6 +25,7 @@ export default {
   data: () => ({
     current_email: null,
     invalid_email: false,
+    selected_index: null,
     email_regexp: /^(([^<>()\]\\.,;:\s@"]+(\.[^<>()\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
   }),
   computed: {
@@ -38,6 +39,13 @@ export default {
     }
   },
   methods: {
+    saveEmail() {
+      if(this.selected_index === null) {
+        this.addEmail()
+      } else {
+        this.updateEmail()
+      }
+    },
     addEmail() {
       let email = this.current_email.trim()
       this.invalid_email = !this.validate(email) || this.exist(email)
@@ -48,16 +56,39 @@ export default {
         this.current_email = null
       }
     },
+    updateEmail() {
+      let email = this.current_email.trim()
+      this.invalid_email = !this.validate(email) || this.exist(email)
+      if(!this.invalid_email) {
+        let email_list = [...this.email_list]
+        email_list[this.selected_index] = email
+        this.email_list = email_list
+        this.current_email = null
+        this.selected_index = null
+      }
+    },
     validate(email) {
       return this.email_regexp.test(email) === true
     },
     exist(email) {
       return this.email_list.indexOf(email) !== -1
     },
+    selectBy(index) {
+      this.current_email = this.email_list[index]
+      this.selected_index = index
+      this.invalid_email = false
+    },
     deleteEmail(index) {
       let email_list = [...this.email_list]
       email_list.splice(index, 1)
       this.email_list = email_list
+    }
+  },
+  watch: {
+    current_email: function (email) {
+      if(email ===null || !email.length) {
+        this.selected_index = null
+      }
     }
   }
 }
